@@ -3,48 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FAMRON Control Panel</title>
+  <title>FAMRON IoT Smart Home</title>
   <link rel="icon" href="https://lh3.googleusercontent.com/u/0/d/1vjW4TAnku2NadzvGl0zoT3E7sgNtb6QH" type="image/x-icon">
-  
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  
   <style>
-    :root {
-      --orange: #FB6C0A;
-      --text-sub: #64748B;
-      --text-main: #1E293B;
-      --blue-l: #EEF2FF;
-    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    *, *::before, *::after { 
-      box-sizing: border-box; 
-      margin: 0; 
-      padding: 0; 
-    }
-
-    /* Exactly mirrors your app's body CSS to prevent scrollbar shifts */
-    body {
+    html, body {
+      height: 100%;
       font-family: 'Inter', system-ui, sans-serif;
-      background: var(--blue-l);
-      min-height: 100vh;
-      color: var(--text-main);
+      overflow: hidden;
       -webkit-font-smoothing: antialiased;
-      overflow-x: hidden; 
     }
 
-    /* Fixed Iframe container */
-    .app-iframe {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      border: none;
-      z-index: 100;
-      display: block;
-    }
-
-    /* --- Flawless Alignment Styles --- */
+    /* ── Loading screen — identical to parent #init-screen ── */
     #init-screen {
       position: fixed;
       inset: 0;
@@ -52,67 +25,108 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      
-      /* THE MAGIC FIX: This perfectly matches Google's hidden 36px top banner offset */
-      padding-top: 36px; 
     }
 
+    /* Grainy gradient background — same pseudo-element technique as parent */
     #init-screen::before {
       content: '';
       position: absolute;
       inset: 0;
       pointer-events: none;
-      z-index: -1; 
-      background: 
+      z-index: -1;
+      background:
         radial-gradient(ellipse 60% 60% at 75% 25%, rgba(255, 190, 245, 0.4), transparent 60%),
         radial-gradient(ellipse 70% 60% at 25% 75%, rgba(106, 115, 255, 0.6), transparent 65%);
-      background-color: #f4f5f8; 
+      background-color: #f4f5f8;
       filter: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
     }
 
-    .init-card { 
-      text-align: center; 
-      padding: 40px; 
-    }
-    
-    .init-card img { 
-      height: 62px; 
-      margin: 0 auto 16px; 
-      filter: drop-shadow(0 4px 18px rgba(255, 255, 255, .25)); 
+    .init-card {
+      text-align: center;
+      padding: 40px;
+      position: relative;
+      z-index: 1;
     }
 
-    .init-card h2 { 
-      font-size: 1.25rem; 
-      font-weight: 800; 
-      color: #000; 
-      margin-bottom: 6px; 
+    /* Logo — height:62px, same drop-shadow as parent */
+    .init-card img {
+      height: 62px;
+      display: block;
+      margin: 0 auto 16px;
+      filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.25));
     }
 
-    .init-card p { 
-      font-size: .8rem; 
-      color: var(--text-sub); 
-      margin-bottom: 20px; 
+    /* Heading — color:#000 (current active style in parent) */
+    .init-card h2 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #000;
+      margin-bottom: 6px;
+    }
+
+    /* Paragraph — color:#64748B (--text-sub, current active style in parent) */
+    .init-card p {
+      font-size: 0.8rem;
+      color: #64748B;
+      margin-bottom: 20px;
+    }
+
+    /* Spinner — #FB6C0A (--orange) at 1.6rem, matches parent exactly */
+    .init-card .spinner {
+      font-size: 1.6rem;
+      color: #FB6C0A;
+    }
+
+    /* ── iframe container — shown after load ── */
+    #app-frame {
+      position: fixed;
+      inset: 0;
+      /* Google Apps Script adds a ~40px warning bar on free accounts.
+         We compensate so the GAS iframe still fills the viewport correctly. */
+      width: 100%;
+      height: 100%;
+      border: none;
+      display: none; /* hidden until iframe fires onload */
     }
   </style>
 </head>
 <body>
-  
+
+  <!-- Loading screen — pixel-identical to parent #init-screen -->
   <div id="init-screen">
     <div class="init-card">
       <img src="https://lh3.googleusercontent.com/u/0/d/1M6-JMmj-i--P13HIOtjGwpxyd5nHkfQI" alt="FAMRON">
       <h2>FAMRON IoT Smart Home</h2>
       <p>Loading your dashboard…</p>
-      <i class="fas fa-spinner fa-spin" style="font-size:1.6rem;color:var(--orange)"></i>
+      <i class="fas fa-spinner fa-spin spinner"></i>
     </div>
   </div>
 
-  <iframe 
-    class="app-iframe"
+  <!-- GAS iframe — invisible until fully loaded -->
+  <iframe
+    id="app-frame"
     src="https://script.google.com/macros/s/AKfycbyn2tE9PK9vwPtyfcOr11EV_Vxr9jWHDk53NYk1PPAdOc0fLxvhZcZp02oSm-3gSjpg/exec"
-    title="FAMRON Control Panel"
-    onload="document.getElementById('init-screen').style.display='none';"
-    allowfullscreen>
-  </iframe>
+    title="FAMRON IoT Smart Home"
+    allowfullscreen
+    onload="onAppLoad()"
+  ></iframe>
 
+  <script>
+    function onAppLoad() {
+      // Hide loading screen, show iframe
+      document.getElementById('init-screen').style.display = 'none';
+      document.getElementById('app-frame').style.display   = 'block';
+    }
+
+    // Fallback: if the iframe takes >15 s (e.g. GAS cold start), show it anyway
+    // to avoid a permanently blank loading screen.
+    setTimeout(function() {
+      var screen = document.getElementById('init-screen');
+      if (screen && screen.style.display !== 'none') {
+        screen.style.display = 'none';
+        document.getElementById('app-frame').style.display = 'block';
+      }
+    }, 15000);
+  </script>
 </body>
 </html>
