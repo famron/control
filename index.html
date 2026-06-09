@@ -5,45 +5,112 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FAMRON Control Panel</title>
   <link rel="icon" href="https://lh3.googleusercontent.com/u/0/d/1vjW4TAnku2NadzvGl0zoT3E7sgNtb6QH" type="image/x-icon">
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  
   <style>
+    /* Required color variables for the text and spinner */
+    :root {
+      --orange: #FB6C0A;
+      --text-sub: #64748B;
+    }
+
+    /* Global reset to match your app exactly */
+    *, *::before, *::after { 
+      box-sizing: border-box; 
+      margin: 0; 
+      padding: 0; 
+    }
+
     html, body {
       margin: 0;
       padding: 0;
       height: 100%;
       overflow: hidden;
-      font-family: sans-serif;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
+    
     .iframe-container {
       position: relative;
       width: 100%;
       height: 100vh;
     }
+    
     iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
-    .loader {
+
+    /* --- Exact Match Loading Screen Styles --- */
+    #init-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #init-screen::before {
+      content: '';
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 1.2rem;
-      color: #666;
-      z-index: 10;
+      inset: 0;
+      pointer-events: none;
+      z-index: -1; 
+      background: 
+        radial-gradient(ellipse 60% 60% at 75% 25%, rgba(255, 190, 245, 0.4), transparent 60%),
+        radial-gradient(ellipse 70% 60% at 25% 75%, rgba(106, 115, 255, 0.6), transparent 65%);
+      background-color: #f4f5f8; 
+      filter: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
+    }
+
+    .init-card { 
+      text-align: center; 
+      padding: 40px; 
+    }
+    
+    .init-card img { 
+      height: 62px; 
+      margin: 0 auto 16px; 
+      filter: drop-shadow(0 4px 18px rgba(255, 255, 255, .25)); 
+    }
+
+    .init-card h2 { 
+      font-size: 1.25rem; 
+      font-weight: 800; 
+      color: #000; 
+      margin-bottom: 6px; 
+    }
+
+    .init-card p { 
+      font-size: .8rem; 
+      color: var(--text-sub); 
+      margin-bottom: 20px; 
     }
   </style>
 </head>
 <body>
   <div class="iframe-container">
-    <div class="loader" id="loader">Loading app...</div>
+    
+    <div id="init-screen">
+      <div class="init-card">
+        <img src="https://lh3.googleusercontent.com/u/0/d/1M6-JMmj-i--P13HIOtjGwpxyd5nHkfQI" alt="FAMRON">
+        <h2>FAMRON IoT Smart Home</h2>
+        <p>Loading your dashboard…</p>
+        <i class="fas fa-spinner fa-spin" style="font-size:1.6rem;color:var(--orange)"></i>
+      </div>
+    </div>
+
     <iframe 
       src="https://script.google.com/macros/s/AKfycbyn2tE9PK9vwPtyfcOr11EV_Vxr9jWHDk53NYk1PPAdOc0fLxvhZcZp02oSm-3gSjpg/exec"
       title="FAMRON Control Panel"
-      onload="document.getElementById('loader').style.display='none';"
+      onload="document.getElementById('init-screen').style.display='none';"
       allowfullscreen>
     </iframe>
+    
   </div>
 </body>
 </html>
-
