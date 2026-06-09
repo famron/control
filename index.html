@@ -5,19 +5,30 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>FAMRON IoT Smart Home</title>
   <link rel="icon" href="https://lh3.googleusercontent.com/u/0/d/1vjW4TAnku2NadzvGl0zoT3E7sgNtb6QH" type="image/x-icon">
+
+  <!-- Same fonts/icons as the GAS app so the loading card is pixel-identical -->
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
   <style>
+    /* ── Reset (matches GAS app body reset) ── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     html, body {
+      width: 100%;
       height: 100%;
+      /* Same font stack as GAS app body */
       font-family: 'Inter', system-ui, sans-serif;
-      overflow: hidden;
       -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
 
-    /* ── Loading screen — identical to parent #init-screen ── */
+    /* ══════════════════════════════════════════════════════════
+       LOADING OVERLAY
+       Exact copy of #init-screen from the GAS Index.html.
+       Uses position:fixed + inset:0 so it fills the full
+       viewport regardless of any browser chrome.
+    ══════════════════════════════════════════════════════════ */
     #init-screen {
       position: fixed;
       inset: 0;
@@ -25,30 +36,36 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      /* No background here — carried by ::before, identical to GAS app */
     }
 
-    /* Grainy gradient background — same pseudo-element technique as parent */
+    /* Grainy gradient pseudo-element — exact copy from GAS app */
     #init-screen::before {
       content: '';
       position: absolute;
       inset: 0;
       pointer-events: none;
       z-index: -1;
+
+      /* The Gradient Base */
       background:
         radial-gradient(ellipse 60% 60% at 75% 25%, rgba(255, 190, 245, 0.4), transparent 60%),
         radial-gradient(ellipse 70% 60% at 25% 75%, rgba(106, 115, 255, 0.6), transparent 65%);
       background-color: #f4f5f8;
+
+      /* The Grainy Texture Overlay */
       filter: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.08'/%3E%3C/svg%3E");
     }
 
+    /* .init-card — exact copy from GAS app */
     .init-card {
       text-align: center;
       padding: 40px;
-      position: relative;
+      position: relative; /* keeps content above ::before */
       z-index: 1;
     }
 
-    /* Logo — height:62px, same drop-shadow as parent */
+    /* Logo — height:62px, exact drop-shadow from GAS app */
     .init-card img {
       height: 62px;
       display: block;
@@ -56,7 +73,7 @@
       filter: drop-shadow(0 4px 18px rgba(255, 255, 255, 0.25));
     }
 
-    /* Heading — color:#000 (current active style in parent) */
+    /* h2 — 1.25rem / 800 / #000 (active style in GAS app) */
     .init-card h2 {
       font-size: 1.25rem;
       font-weight: 800;
@@ -64,69 +81,97 @@
       margin-bottom: 6px;
     }
 
-    /* Paragraph — color:#64748B (--text-sub, current active style in parent) */
+    /* p — .8rem / #64748B = --text-sub (active style in GAS app) */
     .init-card p {
       font-size: 0.8rem;
       color: #64748B;
       margin-bottom: 20px;
     }
 
-    /* Spinner — #FB6C0A (--orange) at 1.6rem, matches parent exactly */
-    .init-card .spinner {
+    /* Spinner — 1.6rem / #FB6C0A = --orange (exact match GAS app) */
+    .init-card .fa-spinner {
       font-size: 1.6rem;
       color: #FB6C0A;
     }
 
-    /* ── iframe container — shown after load ── */
+    /* ══════════════════════════════════════════════════════════
+       IFRAME
+       Hidden by default. Revealed by postMessage from GAS app.
+       position:fixed + inset:0 fills the viewport precisely.
+       The GAS app has its own background so no colour bleed.
+    ══════════════════════════════════════════════════════════ */
     #app-frame {
       position: fixed;
       inset: 0;
-      /* Google Apps Script adds a ~40px warning bar on free accounts.
-         We compensate so the GAS iframe still fills the viewport correctly. */
       width: 100%;
       height: 100%;
       border: none;
-      display: none; /* hidden until iframe fires onload */
+      display: none;      /* shown only after FAMRON_READY signal */
+      opacity: 0;
+      transition: opacity 0.18s ease;
+    }
+
+    #app-frame.visible {
+      display: block;
+      opacity: 1;
     }
   </style>
 </head>
 <body>
 
-  <!-- Loading screen — pixel-identical to parent #init-screen -->
+  <!-- ── Loading overlay — pixel-identical to GAS #init-screen ── -->
   <div id="init-screen">
     <div class="init-card">
       <img src="https://lh3.googleusercontent.com/u/0/d/1M6-JMmj-i--P13HIOtjGwpxyd5nHkfQI" alt="FAMRON">
       <h2>FAMRON IoT Smart Home</h2>
       <p>Loading your dashboard…</p>
-      <i class="fas fa-spinner fa-spin spinner"></i>
+      <i class="fas fa-spinner fa-spin"></i>
     </div>
   </div>
 
-  <!-- GAS iframe — invisible until fully loaded -->
+  <!-- ── GAS app iframe ── -->
   <iframe
     id="app-frame"
-    src="https://script.google.com/macros/s/AKfycbyn2tE9PK9vwPtyfcOr11EV_Vxr9jWHDk53NYk1PPAdOc0fLxvhZcZp02oSm-3gSjpg/exec"
+    src="https://script.google.com/macros/s/AKfycbzl6mfBPQrgUM_iW838nnF91SJeDCXftUK5NDPoeDGNGxMoCiMrR71tR6w7jyQ2I03t/exec"
     title="FAMRON IoT Smart Home"
     allowfullscreen
-    onload="onAppLoad()"
   ></iframe>
 
   <script>
-    function onAppLoad() {
-      // Hide loading screen, show iframe
-      document.getElementById('init-screen').style.display = 'none';
-      document.getElementById('app-frame').style.display   = 'block';
+    var overlay = document.getElementById('init-screen');
+    var frame   = document.getElementById('app-frame');
+    var done    = false;
+
+    function reveal() {
+      if (done) return;
+      done = true;
+      // Show iframe first (still transparent via opacity:0 → block)
+      frame.style.display = 'block';
+      // Tiny rAF delay so display:block paints before opacity transition fires
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() {
+          frame.classList.add('visible');   // fade iframe in
+          overlay.style.display = 'none';  // hide overlay instantly (iframe is now visible)
+        });
+      });
     }
 
-    // Fallback: if the iframe takes >15 s (e.g. GAS cold start), show it anyway
-    // to avoid a permanently blank loading screen.
-    setTimeout(function() {
-      var screen = document.getElementById('init-screen');
-      if (screen && screen.style.display !== 'none') {
-        screen.style.display = 'none';
-        document.getElementById('app-frame').style.display = 'block';
-      }
-    }, 15000);
+    // PRIMARY: GAS app fires postMessage({type:'FAMRON_READY'}) the instant
+    // its own #init-screen is hidden — zero blink because both screens
+    // hide at the exact same render frame.
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'FAMRON_READY') reveal();
+    });
+
+    // FALLBACK A: If postMessage never arrives (e.g. CSP blocks it),
+    // reveal after 12 s so users aren't stuck on a blank loading screen.
+    var fallbackTimer = setTimeout(reveal, 12000);
+
+    // Cancel fallback if postMessage fires first
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'FAMRON_READY') clearTimeout(fallbackTimer);
+    });
   </script>
+
 </body>
 </html>
